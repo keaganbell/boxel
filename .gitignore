@@ -1,0 +1,8 @@
+build/
+
+nob.exe
+nob.exe.old
+
+*.obj
+*.ilk
+*.pdb
