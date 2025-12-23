@@ -1,6 +1,8 @@
 
 #if defined(_WIN32)
 #define VK_USE_PLATFORM_WIN32_KHR
+#elif defined(__linux__)
+#define VK_USE_PLATFORM_XCB_KHR
 #endif
 #include "volk/volk.h"
 #include "volk/volk.c"
@@ -14,6 +16,8 @@
 
 #if defined(_WIN32)
 #include "windows_platform.c"
+#elif defined(__linux__)
+#include "linux_platform.c"
 #endif
 
 static void *window = NULL;
@@ -52,8 +56,8 @@ THREAD_RETURN_TYPE thread_entry_point(void *data) {
         }
 
         barrier_wait(&barrier);
-        if (button_pressed(&controller, Key_Code_Mouse_Left)) {
-            print_info("thread %d: left mouse pressed.", thread_index);
+        if (button_pressed(&controller, Key_Code_Space)) {
+            //print_info("thread %d: space bar pressed.", thread_index);
         }
     }
     return 0;
@@ -69,8 +73,8 @@ int main(void) {
 
     for (uint32_t thread_idx = 0; thread_idx < thread_count; ++thread_idx) {
         threads[thread_idx] = (Thread_Context){0};
-        threads[thread_idx].handle = create_thread(thread_entry_point, &threads[thread_idx]);
         threads[thread_idx].index = thread_idx;
+        threads[thread_idx].handle = create_thread(thread_entry_point, &threads[thread_idx]);
     }
 
     for (uint64_t thread_idx = 0; thread_idx < thread_count; ++thread_idx) {

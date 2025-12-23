@@ -27,10 +27,14 @@ int main(int argc, char **argv) {
     Nob_Cmd compile = {0};
     nob_cmd_append(&compile, "gcc");
     nob_cmd_append(&compile, "-Wall", "-Wextra");
-    nob_cmd_append(&compile, "-o" "build"PROJ_NAME);
-    nob_cmd_append(&compile, "-Icode");
+    nob_cmd_append(&compile, "-Wno-unused-parameter");
+    nob_cmd_append(&compile, "-Wno-unused-variable");
+    nob_cmd_append(&compile, "-ggdb");
+    nob_cmd_append(&compile, "-o" "build/"PROJ_NAME);
+    nob_cmd_append(&compile, "-Icode/");
     nob_cmd_append(&compile, "-DVOLK_VULKAN_H_PATH=\"vulkan/vulkan.h\"");
     nob_cmd_append(&compile, "code/main.c");
+    nob_cmd_append(&compile, "-lxcb", "-lxcb-keysyms");
     if (!nob_cmd_run(&compile)) return 1;
 #endif
 

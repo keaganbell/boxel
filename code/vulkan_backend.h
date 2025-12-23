@@ -1,6 +1,12 @@
 #if !defined(VULKAN_BACKEND_H)
 #define VULKAN_BACKEND_H
 
+#if defined (_WIN32)
+#define VK_PLATFORM_SURFACE "VK_KHR_win32_surface"
+#elif defined (__linux__)
+#define VK_PLATFORM_SURFACE "VK_KHR_xcb_surface"
+#endif
+
 typedef struct {
     VkInstance                  instance;
     VkSurfaceKHR                surface;

@@ -2,6 +2,8 @@ build/
 
 nob.exe
 nob.exe.old
+nob
+nob.old
 
 *.obj
 *.ilk

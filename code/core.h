@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #define func
 
@@ -32,9 +33,11 @@ static inline void print_log(Log_Level level, char *fmt, char *filename, int lin
 }
 
 #if defined(_WIN32)
+#include <windows.h>
 #define virtual_alloc(x) VirtualAlloc(0, x, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE)
-#elif defined(__posix__)
-#define virtual_alloc(x) mmap(0, x, PROT_READ|PROT_WRITE, MAP_ANONYMOUS, -1, 0)
+#elif defined(__linux__)
+#include <sys/mman.h>
+#define virtual_alloc(x) mmap(0, x, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0)
 #endif
 
 #define array_count(x) ((sizeof(x)/sizeof(*(x))))
@@ -156,8 +159,8 @@ typedef struct {
 
 #if defined(_WIN32)
 #define THREAD_RETURN_TYPE int
-#elif defined(__posix__)
-#define THREAD_RETURN_TYPE void
+#elif defined(__linux__)
+#define THREAD_RETURN_TYPE void *
 #endif
 typedef THREAD_RETURN_TYPE (*pfn_thread_func)(void *params);
 Thread create_thread(pfn_thread_func entry_point, void *params);
@@ -168,6 +171,8 @@ void barrier_wait(Barrier *barrier);
 void barrier_destroy(Barrier *barrier);
 
 typedef enum {
+    Key_Code_Unknown,
+
     Key_Code_Space,
     Key_Code_Escape,
     Key_Code_Shift,
@@ -229,3 +234,12 @@ static inline void update_button(Controller*cont, Key_Code code, bool is_up) {
     cont->keys[code].down = !is_up;
     cont->keys[code].released = is_up;
 }
+
+#if defined(__linux__)
+#include <xcb/xcb_keysyms.h>
+typedef struct {
+    xcb_connection_t *connection;
+    xcb_window_t handle;
+    xcb_key_symbols_t *symbols;
+} XCB_Window;
+#endif

@@ -24,7 +24,13 @@ bool vulkan_backend_create_surface(Vulkan_State *vk, void *data) {
     return true;
 
 #elif defined(__linux__)
-    return false;
+    XCB_Window *xcb = (XCB_Window *)data;
+    VkXcbSurfaceCreateInfoKHR info = {0};
+    info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+    info.connection = xcb->connection;
+    info.window = xcb->handle;
+    if (vkCreateXcbSurfaceKHR(vk->instance, &info, NULL, &vk->surface) != VK_SUCCESS) return false;
+    return true;
 #endif
 }
 
@@ -93,37 +99,36 @@ bool vulkan_backend_select_device(Vulkan_State *vk, Fixed_Arena *arena) {
     bool result = false;
     Scratch_Arena scratch = arena_begin_scratch(arena);
 
-    int device_count = 0;
+    uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(vk->instance, &device_count, 0);
     VkPhysicalDevice *phys_devices = push_array(scratch.arena, VkPhysicalDevice, device_count);
     vkEnumeratePhysicalDevices(vk->instance, &device_count, phys_devices);
 
     const char *device_extensions[] = { "VK_KHR_swapchain" };
 
-    VkPhysicalDevice best_device = 0;
-    for (int device_idx = 0; device_idx < device_count; ++device_idx) {
+    for (uint32_t device_idx = 0; device_idx < device_count; ++device_idx) {
         VkPhysicalDevice candidate = phys_devices[device_idx];
 
-        int queue_family_count;
+        uint32_t queue_family_count;
         vkGetPhysicalDeviceQueueFamilyProperties(candidate, &queue_family_count, 0);
         VkQueueFamilyProperties *queue_properties = push_array(scratch.arena, VkQueueFamilyProperties, queue_family_count);
         vkGetPhysicalDeviceQueueFamilyProperties(candidate, &queue_family_count, queue_properties);
 
-        int graphics_index = -1;
-        int present_index = -1;
+        uint32_t graphics_index = UINT32_MAX;
+        uint32_t present_index = UINT32_MAX;
         VkBool32 present_support = false;
-        for (int family_idx = 0; family_idx < queue_family_count; ++family_idx) {
+        for (uint32_t family_idx = 0; family_idx < queue_family_count; ++family_idx) {
             present_support = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(candidate, family_idx, vk->surface, &present_support);
             if (queue_properties[family_idx].queueFlags &VK_QUEUE_GRAPHICS_BIT)
                 graphics_index = family_idx;
             if (present_support)
                 present_index = family_idx;
-            if (graphics_index != -1 && present_index != -1)
+            if (graphics_index != UINT32_MAX && present_index != UINT32_MAX)
                 break;
         }
 
-        bool has_queues = graphics_index != -1 && present_index != -1;
+        bool has_queues = graphics_index != UINT32_MAX && present_index != UINT32_MAX;
         bool has_extensions = vulkan_backend_check_device_extensions(arena, candidate, device_extensions, array_count(device_extensions));
         bool has_formats = vulkan_backend_check_formats(arena, candidate, vk->surface, VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
         bool has_present_mode = vulkan_backend_check_present_mode(arena, candidate, vk->surface, VK_PRESENT_MODE_MAILBOX_KHR);
@@ -175,7 +180,7 @@ bool vulkan_backend_init(Vulkan_State *vk, Fixed_Arena *scratch, void *window, i
     }
 
     const char *layers[] = { "VK_LAYER_KHRONOS_validation" };
-    const char *extensions[] = { "VK_KHR_surface", "VK_KHR_win32_surface" };
+    const char *extensions[] = { "VK_KHR_surface", VK_PLATFORM_SURFACE };
     if (!vulkan_backend_create_instance(vk, layers, array_count(layers), extensions, array_count(extensions))) return false;
     volkLoadInstance(vk->instance);
 
