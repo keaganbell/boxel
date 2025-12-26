@@ -49,6 +49,8 @@ THREAD_RETURN_TYPE thread_entry_point(void *data) {
 
     barrier_wait(&barrier);
     while (running) {
+
+        barrier_wait(&barrier);
         if (thread_index == 0) {
             bool window_should_close;
             process_events(&controller, window, &window_should_close);
@@ -57,7 +59,7 @@ THREAD_RETURN_TYPE thread_entry_point(void *data) {
 
         barrier_wait(&barrier);
         if (button_pressed(&controller, Key_Code_Space)) {
-            //print_info("thread %d: space bar pressed.", thread_index);
+            print_info("Thread %d: space bar pressed.", thread_index);
         }
     }
     return 0;

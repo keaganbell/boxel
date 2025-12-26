@@ -2,7 +2,7 @@
 #define RENDERER_FRONTEND_H
 
 typedef struct {
-    Fixed_Arena arena;
+    Fixed_Arena transient_arena;
     union {
         Vulkan_State vk;
     };

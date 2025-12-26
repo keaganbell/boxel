@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <stdarg.h>
+#include <math.h>
 
 #define func
 
@@ -40,7 +41,11 @@ static inline void print_log(Log_Level level, char *fmt, char *filename, int lin
 #define virtual_alloc(x) mmap(0, x, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0)
 #endif
 
+#define offset_of(t, m) (&((t *)(0)->m))
+
 #define array_count(x) ((sizeof(x)/sizeof(*(x))))
+
+#define clamp(v, min, max) ((v) < (min) ? (min) : (v) > (max) ? (max) : (v))
 
 #define kabarr_max(a, b) ((a) > (b) ? (a) : (b))
 
